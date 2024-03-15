@@ -3,6 +3,7 @@ import { Box, Button, createTheme, Popover, Stack, Typography } from "@mui/mater
 import { makeStyles } from "@mui/styles";
 import CheckIcon from '@mui/icons-material/Check';
 import LogoutIcon from '@mui/icons-material/Logout';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { TeamBalanceIcon } from '../../resources/TeamBalanceIcon';
 import { useDispatch, useSelector } from "react-redux";
 import { abandonBattle, leaveBattle, readyPlayer, selectIsPending, unreadyPlayer } from "../lobbySlice";
@@ -111,6 +112,12 @@ export const BattleCardPlayer = ({
     }
   }
 
+  const handleKickClick = () => {
+    if (isAdmin) {
+      dispatch(leaveBattle({ battleId: battleId, playerId: playerId }))
+    }
+  }
+
   const handleAbandonClick = () => {
     dispatch(abandonBattle({ battleId, playerId }))
   }
@@ -169,10 +176,11 @@ export const BattleCardPlayer = ({
             <Typography variant="h5" color="secondary" className={classes.selfPlayerName}>{playerName}</Typography>
             {readyContent}
             {leavable ? <LogoutIcon className={classes.clickableIcon} color="error" onClick={leaveGame}/> : ""}
-          </Box>
-
-          {isAdmin ? <Typography variant="h6" color="darkgrey" theme={eloTheme}
+            {isAdmin ? <Typography variant="h5" color="darkgrey" theme={eloTheme}
                                  className={classes.PlayerElo}>{playerElo}</Typography> : null}
+            {isAdmin ? <CancelIcon className={classes.clickableIcon} color="error" onClick={handleKickClick}/> : null}
+          </Box>
+          
 
         </Stack>
         {side === ALLIED_SIDE ? doctrineIcon : null}
@@ -196,9 +204,11 @@ export const BattleCardPlayer = ({
             <TeamBalanceIcon team={teamBalance} isFull={isFull}/>
             <Typography variant="h5" className={classes.playerName}> {playerName}</Typography>
             {readyContent}
-          </Box>
-          {isAdmin ? <Typography variant="h6" color="darkgrey" theme={eloTheme}
+            {isAdmin ? <Typography variant="h5" color="darkgrey" theme={eloTheme}
                                  className={classes.PlayerElo}>{playerElo}</Typography> : null}
+            {isAdmin ? <CancelIcon className={classes.clickableIcon} color="error" onClick={handleKickClick}/> : null}
+          </Box>
+
         </Stack>
         {side === ALLIED_SIDE ? doctrineIcon : null}
       </>
