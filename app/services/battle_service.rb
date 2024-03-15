@@ -162,6 +162,44 @@ class BattleService
     end
   end
 
+  def kick_player(battle_id, kick_player_id)
+    # Validate caller is admin
+    raise BattleValidationError.new "Player #{@player} is not an admin" unless @player.admin?
+
+    # Validate battle exists
+    battle = validate_battle(battle_id)
+
+    battle.with_lock do
+
+      # Validate battle is readyable
+      validate_battle_readyable(battle)
+
+      # Validate the player is in the battle
+      validate_player_in_battle(battle)
+
+      # Attempt to remove player from battle
+      BattlePlayer.find_by(battle: battle, player: kick_player_id).destroy
+
+      if battle.full?
+        battle.not_full!
+        battle.save!
+      end
+
+      if battle.reload.battle_players.count == 0
+        # Deleted the last player, delete the battle
+        battle.destroy
+        message_hash = { type: REMOVE_BATTLE, battle: battle }
+      else
+        unready_all_players(battle)
+        message_hash = { type: PLAYER_LEFT, battle: battle.reload }
+      end
+
+      # Broadcast battle update
+      battle_message = Entities::BattleMessage.represent message_hash, type: :include_players
+      broadcast_cable(battle_message)
+    end
+  end
+
   def leave_battle(battle_id)
     # Validate battle exists
     battle = validate_battle(battle_id)
